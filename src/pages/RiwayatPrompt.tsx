@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiGetPromptHistory, apiDeletePromptHistory } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Copy, Trash2, History } from "lucide-react";
@@ -18,14 +18,14 @@ export default function RiwayatPrompt() {
 
   const fetchHistory = async () => {
     if (!user) return;
-    const { data } = await supabase.from("prompt_history").select("*").order("created_at", { ascending: false });
-    if (data) setItems(data);
+    const data = await apiGetPromptHistory();
+    setItems(Array.isArray(data) ? data : []);
   };
 
   useEffect(() => { fetchHistory(); }, [user]);
 
   const deleteItem = async (id: string) => {
-    await supabase.from("prompt_history").delete().eq("id", id);
+    await apiDeletePromptHistory(id);
     toast.success("Riwayat dihapus");
     fetchHistory();
   };

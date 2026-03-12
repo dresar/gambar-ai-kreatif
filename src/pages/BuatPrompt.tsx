@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiGetDropdownCategories, apiGetDropdownOptions, apiCreatePrompt, apiCreatePromptHistory } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -33,12 +33,12 @@ export default function BuatPrompt() {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [catRes, optRes] = await Promise.all([
-        supabase.from("dropdown_categories").select("*").order("sort_order"),
-        supabase.from("dropdown_options").select("*").order("sort_order"),
+      const [catData, optData] = await Promise.all([
+        apiGetDropdownCategories(),
+        apiGetDropdownOptions(),
       ]);
-      if (catRes.data) setCategories(catRes.data);
-      if (optRes.data) setOptions(optRes.data);
+      setCategories(Array.isArray(catData) ? catData : []);
+      setOptions(Array.isArray(optData) ? optData : []);
     };
     load();
   }, [user]);
@@ -73,23 +73,20 @@ export default function BuatPrompt() {
   const handleSave = async () => {
     if (!promptText.trim() || !user) return;
     setSaving(true);
-    const { error } = await supabase.from("prompts").insert({
-      user_id: user.id,
-      prompt_text: promptText,
-      parameters: selections,
-      prompt_type: "image",
-    });
-    if (error) {
-      toast.error("Gagal menyimpan prompt");
-    } else {
-      // Also save to history
-      await supabase.from("prompt_history").insert({
-        user_id: user.id,
+    try {
+      await apiCreatePrompt({
+        prompt_text: promptText,
+        parameters: selections,
+        prompt_type: "image",
+      });
+      await apiCreatePromptHistory({
         prompt_text: promptText,
         parameters: selections,
         prompt_type: "image",
       });
       toast.success("Prompt berhasil disimpan!");
+    } catch {
+      toast.error("Gagal menyimpan prompt");
     }
     setSaving(false);
   };

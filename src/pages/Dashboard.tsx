@@ -2,7 +2,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Wand2, Library, History, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiGetStats } from "@/lib/api";
 
 interface Stats {
   totalPrompts: number;
@@ -17,15 +17,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return;
     const fetchStats = async () => {
-      const [prompts, templates, history] = await Promise.all([
-        supabase.from("prompts").select("id", { count: "exact", head: true }),
-        supabase.from("prompt_templates").select("id", { count: "exact", head: true }),
-        supabase.from("prompt_history").select("id", { count: "exact", head: true }),
-      ]);
+      const stats = await apiGetStats();
       setStats({
-        totalPrompts: prompts.count ?? 0,
-        totalTemplates: templates.count ?? 0,
-        totalHistory: history.count ?? 0,
+        totalPrompts: stats.totalPrompts ?? 0,
+        totalTemplates: stats.totalTemplates ?? 0,
+        totalHistory: stats.totalHistory ?? 0,
       });
     };
     fetchStats();

@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiLogin, apiSignUp } from "@/lib/api";
+import { setAuthToken } from "@/lib/auth";
+import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Wand2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+const DEV_EMAIL = "eka@example.com";
+const DEV_PASSWORD = "password123";
+
 export default function AuthPage() {
+  const { setUser } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,20 +23,32 @@ export default function AuthPage() {
     setLoading(true);
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const { user, token } = await apiLogin(email, password);
+        setAuthToken(token);
+        setUser(user);
         toast.success("Berhasil masuk!");
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-        toast.success("Pendaftaran berhasil! Silakan periksa email Anda untuk verifikasi.");
+        const { user, token } = await apiSignUp(email, password);
+        setAuthToken(token);
+        setUser(user);
+        toast.success("Pendaftaran berhasil!");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Terjadi kesalahan");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Terjadi kesalahan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDevLogin = async () => {
+    setLoading(true);
+    try {
+      const { user, token } = await apiLogin(DEV_EMAIL, DEV_PASSWORD);
+      setAuthToken(token);
+      setUser(user);
+      toast.success("Dev login berhasil!");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Dev login gagal. Pastikan server API jalan dan data seed sudah dijalankan.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +100,7 @@ export default function AuthPage() {
             </Button>
           </form>
 
-          <div className="mt-4 text-center">
+          <div className="mt-4 flex flex-col gap-2">
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
@@ -90,6 +108,16 @@ export default function AuthPage() {
             >
               {isLogin ? "Belum punya akun? Daftar" : "Sudah punya akun? Masuk"}
             </button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full text-muted-foreground border-dashed"
+              onClick={handleDevLogin}
+              disabled={loading}
+            >
+              Dev Login (Auto Login)
+            </Button>
           </div>
         </div>
       </div>

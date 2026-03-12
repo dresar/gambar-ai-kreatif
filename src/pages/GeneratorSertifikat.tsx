@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { supabase } from "@/integrations/supabase/client";
+import { apiCreatePrompt, apiCreatePromptHistory } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,19 +51,21 @@ export default function GeneratorSertifikat() {
   const handleSave = async () => {
     if (!prompt || !user) return;
     setSaving(true);
-    await supabase.from("prompts").insert({
-      user_id: user.id,
-      prompt_text: prompt,
-      parameters: form,
-      prompt_type: "certificate",
-    });
-    await supabase.from("prompt_history").insert({
-      user_id: user.id,
-      prompt_text: prompt,
-      parameters: form,
-      prompt_type: "certificate",
-    });
-    toast.success("Prompt sertifikat disimpan!");
+    try {
+      await apiCreatePrompt({
+        prompt_text: prompt,
+        parameters: form,
+        prompt_type: "certificate",
+      });
+      await apiCreatePromptHistory({
+        prompt_text: prompt,
+        parameters: form,
+        prompt_type: "certificate",
+      });
+      toast.success("Prompt sertifikat disimpan!");
+    } catch {
+      toast.error("Gagal menyimpan");
+    }
     setSaving(false);
   };
 

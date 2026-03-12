@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiGetProfile, apiUpdateProfile } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
@@ -18,25 +18,27 @@ export default function Pengaturan() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("*").eq("user_id", user.id).single()
-      .then(({ data }) => {
-        if (data) {
-          setAiEndpoint(data.ai_endpoint_url || "");
-          setAiModel(data.ai_model_name || "");
-        }
-      });
+    apiGetProfile().then((data) => {
+      if (data) {
+        setAiEndpoint(data.ai_endpoint_url || "");
+        setAiModel(data.ai_model_name || "");
+      }
+    });
   }, [user]);
 
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({
-      ai_endpoint_url: aiEndpoint || null,
-      ai_model_name: aiModel || null,
-      theme_preference: theme,
-    }).eq("user_id", user.id);
-    if (error) toast.error("Gagal menyimpan pengaturan");
-    else toast.success("Pengaturan disimpan!");
+    try {
+      await apiUpdateProfile({
+        ai_endpoint_url: aiEndpoint || undefined,
+        ai_model_name: aiModel || undefined,
+        theme_preference: theme,
+      });
+      toast.success("Pengaturan disimpan!");
+    } catch {
+      toast.error("Gagal menyimpan pengaturan");
+    }
     setSaving(false);
   };
 

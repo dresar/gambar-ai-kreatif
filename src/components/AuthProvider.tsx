@@ -1,43 +1,64 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { apiGetMe } from "@/lib/api";
+import { getAuthToken, clearAuthToken } from "@/lib/auth";
+
+export interface AppUser {
+  id: string;
+  email: string;
+  username?: string | null;
+}
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: AppUser | null;
+  session: { user: AppUser } | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  setUser: (u: AppUser | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+  const loadSession = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) {
+      setUser(null);
       setLoading(false);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      return;
+    }
+    try {
+      const me = await apiGetMe();
+      setUser({ id: me.id, email: me.email, username: me.username ?? null });
+    } catch {
+      clearAuthToken();
+      setUser(null);
+    } finally {
       setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
   }, []);
 
+  useEffect(() => {
+    loadSession();
+  }, [loadSession]);
+
   const signOut = async () => {
-    await supabase.auth.signOut();
+    clearAuthToken();
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session: user ? { user } : null,
+        loading,
+        signOut,
+        setUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

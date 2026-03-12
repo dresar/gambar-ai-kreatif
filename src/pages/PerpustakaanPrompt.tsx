@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiGetPrompts, apiUpdatePrompt, apiDeletePrompt } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,22 +24,19 @@ export default function PerpustakaanPrompt() {
 
   const fetchPrompts = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("prompts")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (data) setPrompts(data);
+    const data = await apiGetPrompts();
+    setPrompts(Array.isArray(data) ? data : []);
   };
 
   useEffect(() => { fetchPrompts(); }, [user]);
 
   const toggleFav = async (id: string, current: boolean) => {
-    await supabase.from("prompts").update({ is_favorite: !current }).eq("id", id);
+    await apiUpdatePrompt(id, { is_favorite: !current });
     fetchPrompts();
   };
 
   const deletePrompt = async (id: string) => {
-    await supabase.from("prompts").delete().eq("id", id);
+    await apiDeletePrompt(id);
     toast.success("Prompt dihapus");
     fetchPrompts();
   };

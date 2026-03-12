@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  apiGetDropdownCategories,
+  apiGetDropdownOptions,
+  apiCreateDropdownCategory,
+  apiCreateDropdownOption,
+  apiDeleteDropdownCategory,
+  apiDeleteDropdownOption,
+} from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,13 +42,13 @@ export default function PembuatDropdown() {
 
   const fetchData = async () => {
     if (!user) return;
-    const { data: cats } = await supabase.from("dropdown_categories").select("*").order("sort_order");
-    if (cats) {
+    const cats = await apiGetDropdownCategories();
+    if (cats && Array.isArray(cats)) {
       setCategories(cats);
-      const { data: opts } = await supabase.from("dropdown_options").select("*").order("sort_order");
-      if (opts) {
+      const opts = await apiGetDropdownOptions();
+      if (opts && Array.isArray(opts)) {
         const grouped: Record<string, Option[]> = {};
-        opts.forEach((o) => {
+        opts.forEach((o: Option) => {
           if (!grouped[o.category_id]) grouped[o.category_id] = [];
           grouped[o.category_id].push(o);
         });
@@ -55,39 +62,45 @@ export default function PembuatDropdown() {
   const addCategory = async () => {
     if (!newCatName.trim() || !user) return;
     setSaving(true);
-    const slug = newCatName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    const { error } = await supabase.from("dropdown_categories").insert({
-      user_id: user.id,
-      name: newCatName,
-      slug,
-    });
-    if (error) toast.error("Gagal menambah kategori");
-    else { toast.success("Kategori ditambahkan!"); setNewCatName(""); fetchData(); }
+    try {
+      const slug = newCatName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      await apiCreateDropdownCategory({ name: newCatName, slug });
+      toast.success("Kategori ditambahkan!");
+      setNewCatName("");
+      fetchData();
+    } catch {
+      toast.error("Gagal menambah kategori");
+    }
     setSaving(false);
   };
 
   const addOption = async (catId: string) => {
     if (!newOptName.trim() || !newOptFragment.trim() || !user) return;
     setSaving(true);
-    const { error } = await supabase.from("dropdown_options").insert({
-      category_id: catId,
-      user_id: user.id,
-      name: newOptName,
-      prompt_fragment: newOptFragment,
-    });
-    if (error) toast.error("Gagal menambah opsi");
-    else { toast.success("Opsi ditambahkan!"); setNewOptName(""); setNewOptFragment(""); fetchData(); }
+    try {
+      await apiCreateDropdownOption({
+        category_id: catId,
+        name: newOptName,
+        prompt_fragment: newOptFragment,
+      });
+      toast.success("Opsi ditambahkan!");
+      setNewOptName("");
+      setNewOptFragment("");
+      fetchData();
+    } catch {
+      toast.error("Gagal menambah opsi");
+    }
     setSaving(false);
   };
 
   const deleteCategory = async (id: string) => {
-    await supabase.from("dropdown_categories").delete().eq("id", id);
+    await apiDeleteDropdownCategory(id);
     toast.success("Kategori dihapus");
     fetchData();
   };
 
   const deleteOption = async (id: string) => {
-    await supabase.from("dropdown_options").delete().eq("id", id);
+    await apiDeleteDropdownOption(id);
     toast.success("Opsi dihapus");
     fetchData();
   };

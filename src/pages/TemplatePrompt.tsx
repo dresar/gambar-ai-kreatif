@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiGetPromptTemplates } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { FileText, ArrowRight } from "lucide-react";
@@ -20,8 +20,9 @@ export default function TemplatePrompt() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("prompt_templates").select("*").order("created_at", { ascending: false })
-      .then(({ data }) => { if (data) setTemplates(data); });
+    apiGetPromptTemplates().then((data) => {
+      setTemplates(Array.isArray(data) ? data : []);
+    });
   }, [user]);
 
   return (
