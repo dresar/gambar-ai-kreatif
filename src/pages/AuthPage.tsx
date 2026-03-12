@@ -48,7 +48,9 @@ export default function AuthPage() {
       setUser(user);
       toast.success("Dev login berhasil!");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Dev login gagal. Pastikan server API jalan dan data seed sudah dijalankan.");
+      const msg = err instanceof Error ? err.message : "Dev login gagal.";
+      toast.error(msg);
+      console.error("Dev login error:", err);
     } finally {
       setLoading(false);
     }
@@ -65,7 +67,7 @@ export default function AuthPage() {
             AI Prompt Generator
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {isLogin ? "Masuk ke akun Anda" : "Buat akun baru"}
+            {isLogin ? "Masuk ke akun Anda (wajib untuk mengakses aplikasi)" : "Buat akun baru"}
           </p>
         </div>
 
@@ -116,8 +118,11 @@ export default function AuthPage() {
               onClick={handleDevLogin}
               disabled={loading}
             >
-              Dev Login (Auto Login)
+              Login Cepat (akun seed database)
             </Button>
+            <p className="text-xs text-muted-foreground text-center mt-1">
+              Semua login memakai autentikasi database. Login cepat memakai akun dari <code className="bg-muted px-1 rounded">npm run seed</code>.
+            </p>
           </div>
         </div>
       </div>

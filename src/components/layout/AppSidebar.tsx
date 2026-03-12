@@ -8,6 +8,7 @@ import {
   ListPlus,
   History,
   Settings,
+  User,
   LogOut,
   Moon,
   Sun,
@@ -38,6 +39,7 @@ const menuItems = [
   { title: "Template Prompt", url: "/template", icon: FileText },
   { title: "Pembuat Dropdown", url: "/pembuat-dropdown", icon: ListPlus },
   { title: "Riwayat Prompt", url: "/riwayat", icon: History },
+  { title: "Profil", url: "/profil", icon: User },
   { title: "Pengaturan", url: "/pengaturan", icon: Settings },
 ];
 

@@ -1,6 +1,3 @@
-/**
- * Convert Drizzle camelCase row to snake_case for API response (Supabase-compatible).
- */
 function toSnakeKeys(obj: Record<string, unknown> | null | undefined): Record<string, unknown> | null {
   if (obj == null) return null;
   const out: Record<string, unknown> = {};

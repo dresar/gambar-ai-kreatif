@@ -1,11 +1,10 @@
 /**
- * Konfigurasi akses database via API backend.
- * Koneksi langsung ke Neon hanya di server; frontend memanggil API ini.
+ * Base URL untuk panggilan API. Di development dengan Vite proxy gunakan ''.
  */
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 export function getApiUrl(): string {
-  return API_URL;
+  return API_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:5000");
 }
 
 import { getAuthToken } from "@/lib/auth";

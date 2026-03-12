@@ -1,3 +1,8 @@
+/**
+ * Koneksi DB untuk API. Pakai pg (node-postgres) supaya stabil di Node.js;
+ * driver Neon serverless HTTP sering error "could not parse the HTTP request body" dengan Drizzle.
+ */
+import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 

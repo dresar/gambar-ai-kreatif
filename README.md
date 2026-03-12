@@ -1,5 +1,55 @@
 # Welcome to your Lovable project
 
+## Unified Monorepo (Hono + Vite + Neon)
+
+Proyek ini memakai **satu root `package.json`**: frontend (Vite + React) dan backend API (Hono) di folder `api/`.
+
+### Instalasi dependency (satu perintah)
+
+```bash
+bun add hono @hono/node-server drizzle-orm @neondatabase/serverless bcryptjs jsonwebtoken dotenv && bun add -d drizzle-kit tsx @types/bcryptjs @types/jsonwebtoken
+```
+
+Atau dengan npm:
+
+```bash
+npm install hono @hono/node-server drizzle-orm @neondatabase/serverless bcryptjs jsonwebtoken dotenv
+npm install -D drizzle-kit tsx @types/bcryptjs @types/jsonwebtoken
+```
+
+### Variabel lingkungan
+
+Buat file `.env` di root:
+
+```
+DATABASE_URL="postgresql://neondb_owner:npg_lbZ1MYaAK3uL@ep-late-term-a1ibnjpk-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+JWT_SECRET=your-secret-key
+VITE_API_URL=
+```
+
+`VITE_API_URL` kosong agar di development request ke `/api` di-proxy Vite ke backend (port 5000).
+
+### Script
+
+| Script | Deskripsi |
+|--------|-----------|
+| `bun run dev` | Jalankan frontend Vite (port 8080) |
+| `bun run dev:api` | Jalankan backend Hono (port 5000) |
+| `bun run seed` | Seed user dummy (eka@example.com / password123) |
+| `bun run db:push` | Sinkron skema Drizzle ke Neon |
+
+Jalankan **dua terminal**: `bun run dev` dan `bun run dev:api`. Dev Login memakai kredensial di atas setelah seed dijalankan.
+
+### Menghapus folder `server/` lama
+
+Jika masih ada folder `server/` dari setup sebelumnya, tutup proses yang memakainya (terminal/IDE), lalu hapus manual:
+
+```bash
+rm -rf server
+```
+
+---
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID

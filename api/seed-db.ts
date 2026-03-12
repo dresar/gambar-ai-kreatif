@@ -1,0 +1,13 @@
+/**
+ * Koneksi DB khusus untuk seed (pakai pg agar batch insert stabil).
+ * API tetap pakai api/db.ts (Neon serverless).
+ */
+import "dotenv/config";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL is required");
+
+const pool = new pg.Pool({ connectionString });
+export const db = drizzle(pool);

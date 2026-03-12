@@ -16,6 +16,7 @@ import TemplatePrompt from "@/pages/TemplatePrompt";
 import PembuatDropdown from "@/pages/PembuatDropdown";
 import RiwayatPrompt from "@/pages/RiwayatPrompt";
 import Pengaturan from "@/pages/Pengaturan";
+import Profil from "@/pages/Profil";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ function ProtectedRoutes() {
     );
   }
 
+  // Wajib login: semua route app pakai auth asli database (JWT dari API)
   if (!user) return <Navigate to="/auth" replace />;
 
   return (
@@ -58,6 +60,7 @@ const App = () => (
                 <Route path="pembuat-dropdown" element={<PembuatDropdown />} />
                 <Route path="riwayat" element={<RiwayatPrompt />} />
                 <Route path="pengaturan" element={<Pengaturan />} />
+                <Route path="profil" element={<Profil />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
