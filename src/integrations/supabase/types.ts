@@ -14,7 +14,218 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dropdown_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          sort_order: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dropdown_options: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          name: string
+          prompt_fragment: string
+          sort_order: number | null
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          name: string
+          prompt_fragment: string
+          sort_order?: number | null
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          name?: string
+          prompt_fragment?: string
+          sort_order?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dropdown_options_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "dropdown_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          ai_endpoint_url: string | null
+          ai_model_name: string | null
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          theme_preference: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_endpoint_url?: string | null
+          ai_model_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          theme_preference?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_endpoint_url?: string | null
+          ai_model_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          theme_preference?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      prompt_history: {
+        Row: {
+          created_at: string
+          id: string
+          parameters: Json | null
+          prompt_text: string
+          prompt_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          parameters?: Json | null
+          prompt_text: string
+          prompt_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          parameters?: Json | null
+          prompt_text?: string
+          prompt_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      prompt_templates: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          preset_parameters: Json | null
+          prompt_fragment: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          preset_parameters?: Json | null
+          prompt_fragment?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          preset_parameters?: Json | null
+          prompt_fragment?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      prompts: {
+        Row: {
+          created_at: string
+          id: string
+          is_favorite: boolean | null
+          parameters: Json | null
+          prompt_text: string
+          prompt_type: string | null
+          tags: string[] | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_favorite?: boolean | null
+          parameters?: Json | null
+          prompt_text: string
+          prompt_type?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_favorite?: boolean | null
+          parameters?: Json | null
+          prompt_text?: string
+          prompt_type?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
