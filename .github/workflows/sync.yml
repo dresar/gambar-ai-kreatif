@@ -1,25 +1,20 @@
-# Sinkron repo kamu dengan upstream (repo asli) supaya clone/fork tetap dapat update kode terbaru.
-#
-# Cara pakai:
-# 1. Fork / clone repo ini ke akun GitHub kamu.
-# 2. Settings → Secrets and variables → Actions → Variables → New repository variable
-#    Name: UPSTREAM_REPO
-#    Value: URL git upstream, contoh: https://github.com/PEMILIK/gambar-ai-kreatif.git
-# 3. Actions → "Sync upstream" → Run workflow (manual), atau biarkan jadwal mingguan jalan.
-#
-# Lokal (tanpa Actions): git remote add upstream <URL> && git fetch upstream && git merge upstream/main
+# Upstream resmi: https://github.com/dresar/gambar-ai-kreatif
+# Fork: merge otomatis dari dresar setiap Senin, atau Run workflow manual.
+# Variable UPSTREAM_REPO opsional (override URL lain).
 
 name: Sync upstream
+
+env:
+  DEFAULT_UPSTREAM: https://github.com/dresar/gambar-ai-kreatif.git
 
 on:
   workflow_dispatch:
     inputs:
       upstream_url:
-        description: "URL git upstream (opsional, override variable)"
+        description: "Override URL upstream (kosong = dresar/gambar-ai-kreatif)"
         required: false
         default: ""
   schedule:
-    # Setiap Senin 06:00 UTC — sesuaikan jika perlu
     - cron: "0 6 * * 1"
 
 concurrency:
@@ -28,32 +23,28 @@ concurrency:
 
 jobs:
   sync:
-    name: Merge upstream → default branch
+    name: Merge upstream → ${{ github.event.repository.default_branch }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Jadwal mingguan: hanya fork (bukan repo utama dresar)
+    if: github.event_name == 'workflow_dispatch' || github.repository != 'dresar/gambar-ai-kreatif'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Resolve upstream URL
+      - name: Upstream URL
         id: up
         run: |
           URL="${{ inputs.upstream_url }}"
-          if [ -z "$URL" ]; then URL="${{ vars.UPSTREAM_REPO }}"; fi
-          if [ -z "$URL" ]; then
-            echo "skip=true" >> $GITHUB_OUTPUT
-            echo "::notice::Set repository variable UPSTREAM_REPO atau isi input upstream_url saat Run workflow."
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-            echo "url=$URL" >> $GITHUB_OUTPUT
-          fi
+          [ -z "$URL" ] && URL="${{ vars.UPSTREAM_REPO }}"
+          [ -z "$URL" ] && URL="${{ env.DEFAULT_UPSTREAM }}"
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "::notice::Upstream $URL"
 
-      - name: Fetch & merge upstream
-        if: steps.up.outputs.skip == 'false'
+      - name: Merge dari dresar/gambar-ai-kreatif
         run: |
           set -e
           git config user.name "github-actions[bot]"
@@ -63,9 +54,5 @@ jobs:
           git remote remove upstream 2>/dev/null || true
           git remote add upstream "${{ steps.up.outputs.url }}"
           git fetch upstream "$BRANCH"
-          git merge "upstream/$BRANCH" -m "chore(sync): merge upstream $BRANCH" --no-edit
+          git merge "upstream/$BRANCH" -m "chore(sync): upstream $BRANCH" --no-edit
           git push origin "$BRANCH"
-
-      - name: Skip notice
-        if: steps.up.outputs.skip == 'true'
-        run: echo "Sync dilewati — belum ada UPSTREAM_REPO."

@@ -170,16 +170,16 @@ Login dengan tabel **Akun default** di atas (setelah seed).
 git pull origin main   # atau nama branch default kamu
 ```
 
-### Otomatis — GitHub Actions `sync.yml`
+### Otomatis — GitHub Actions ([`sync.yml`](.github/workflows/sync.yml))
 
-1. Di repo **fork / clone** kamu: **Settings → Secrets and variables → Actions → Variables**
-2. Tambah **Repository variable**:
-   - **Name:** `UPSTREAM_REPO`
-   - **Value:** URL git repo asli, contoh `https://github.com/username/gambar-ai-kreatif.git`
-3. **Actions** → workflow **Sync upstream** → **Run workflow** (bisa isi **upstream_url** sekali jalan kalau belum set variable).
-4. Jadwal bawaan: **setiap Senin** merge branch default upstream ke branch default repo kamu.
+Upstream bawaan: **[dresar/gambar-ai-kreatif](https://github.com/dresar/gambar-ai-kreatif)** (`https://github.com/dresar/gambar-ai-kreatif.git`).
 
-Konflik merge harus diselesaikan manual di mesin lokal (`git merge`, lalu push).
+1. **Fork** repo itu ke akun kamu (atau clone lalu push ke repo sendiri).
+2. **Actions** → **Sync upstream** → **Run workflow** — langsung jalan tanpa set variable.
+3. **Jadwal:** setiap **Senin 06:00 UTC** — otomatis merge `main` dari dresar ke fork (repo **dresar** sendiri tidak di-merge oleh jadwal).
+4. **Opsional:** variable `UPSTREAM_REPO` kalau mau sumber selain dresar.
+
+Lokal: `git remote add upstream https://github.com/dresar/gambar-ai-kreatif.git` lalu `git fetch upstream && git merge upstream/main`
 
 ---
 
