@@ -76,7 +76,6 @@ export default function Profil() {
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <User className="h-6 w-6 text-primary" /> Profil
         </h1>
-        <p className="text-muted-foreground mt-1">Kelola data akun dan keamanan</p>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-6">

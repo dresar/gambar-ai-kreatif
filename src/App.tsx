@@ -12,10 +12,9 @@ import BuatPrompt from "@/pages/BuatPrompt";
 import AnalisisGambar from "@/pages/AnalisisGambar";
 import GeneratorSertifikat from "@/pages/GeneratorSertifikat";
 import PerpustakaanPrompt from "@/pages/PerpustakaanPrompt";
-import TemplatePrompt from "@/pages/TemplatePrompt";
+import PerpustakaanDetail from "@/pages/PerpustakaanDetail";
 import PembuatDropdown from "@/pages/PembuatDropdown";
 import RiwayatPrompt from "@/pages/RiwayatPrompt";
-import Pengaturan from "@/pages/Pengaturan";
 import Profil from "@/pages/Profil";
 import NotFound from "@/pages/NotFound";
 
@@ -46,7 +45,12 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <AuthProvider>
             <Routes>
               <Route path="/auth" element={<AuthPageWrapper />} />
@@ -55,11 +59,10 @@ const App = () => (
                 <Route path="buat-prompt" element={<BuatPrompt />} />
                 <Route path="analisis-gambar" element={<AnalisisGambar />} />
                 <Route path="generator-sertifikat" element={<GeneratorSertifikat />} />
+                <Route path="perpustakaan/:id" element={<PerpustakaanDetail />} />
                 <Route path="perpustakaan" element={<PerpustakaanPrompt />} />
-                <Route path="template" element={<TemplatePrompt />} />
                 <Route path="pembuat-dropdown" element={<PembuatDropdown />} />
                 <Route path="riwayat" element={<RiwayatPrompt />} />
-                <Route path="pengaturan" element={<Pengaturan />} />
                 <Route path="profil" element={<Profil />} />
               </Route>
               <Route path="*" element={<NotFound />} />

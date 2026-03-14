@@ -82,9 +82,9 @@ export async function apiChangePassword(body: {
 }
 
 // ---- Stats ----
-export async function apiGetStats(): Promise<{ totalPrompts: number; totalTemplates: number; totalHistory: number }> {
+export async function apiGetStats(): Promise<{ totalPrompts: number; totalHistory: number }> {
   const res = await fetch(`${base()}/api/stats`, { headers: headers() });
-  const out = await parse<{ totalPrompts: number; totalTemplates: number; totalHistory: number }>(res);
+  const out = await parse<{ totalPrompts: number; totalHistory: number }>(res);
   const d = data(out);
   if (!d) throw new Error("Gagal memuat statistik");
   return d;
@@ -99,8 +99,6 @@ export async function apiGetProfile(): Promise<Record<string, unknown> | null> {
 }
 
 export async function apiUpdateProfile(updates: {
-  ai_endpoint_url?: string;
-  ai_model_name?: string;
   theme_preference?: string;
 }): Promise<Record<string, unknown>> {
   const res = await fetch(`${base()}/api/profiles/me`, {
@@ -114,11 +112,181 @@ export async function apiUpdateProfile(updates: {
   return d as Record<string, unknown>;
 }
 
+// ---- AI (config dari .env di server; generasi dipicu dari client via endpoint ini) ----
+export async function apiGetAiConfig(): Promise<{
+  base_url: string;
+  model: string;
+  key_configured: boolean;
+}> {
+  const res = await fetch(`${base()}/api/ai/config`);
+  const out = await parse<{ base_url: string; model: string; key_configured?: boolean }>(res);
+  const d = data(out);
+  if (!d) throw new Error("Gagal memuat konfigurasi AI");
+  return {
+    base_url: d.base_url,
+    model: d.model,
+    key_configured: d.key_configured === true,
+  };
+}
+
+export async function apiAiChat(messages: Array<{ role: "user" | "assistant" | "system"; content: string }>): Promise<{ content: string } | null> {
+  const res = await fetch(`${base()}/api/ai/chat`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({ messages }),
+  });
+  const out = await parse<{ content: string } | null>(res);
+  return data(out);
+}
+
+/** AI vision: prompt sertifikat + banyak logo (data URL terkompres). */
+export async function apiSertifikatDenganLogo(body: { instruction: string; logos: string[] }): Promise<string> {
+  const res = await fetch(`${base()}/api/ai/sertifikat-logo`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(body),
+  });
+  const out = await parse<{ content: string }>(res);
+  const d = data(out);
+  if (!d?.content) throw new Error("Hasil kosong");
+  return d.content;
+}
+
+export async function apiAnalyzeImage(imageDataUrl: string, instruction?: string): Promise<string> {
+  const res = await fetch(`${base()}/api/ai/analyze-image`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({ image_base64: imageDataUrl, instruction: instruction?.trim() || undefined }),
+  });
+  const out = await parse<{ content: string }>(res);
+  const d = data(out);
+  if (!d?.content) throw new Error("Hasil analisis kosong");
+  return d.content;
+}
+
+export type AnalisisInstruksiRow = {
+  id: string;
+  user_id: string;
+  judul: string;
+  instruksi: string;
+  sort_order: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function apiListAnalisisInstruksi(): Promise<AnalisisInstruksiRow[]> {
+  const res = await fetch(`${base()}/api/analisis-instruksi`, { headers: headers() });
+  const out = await parse<AnalisisInstruksiRow[]>(res);
+  return (data(out) as AnalisisInstruksiRow[]) ?? [];
+}
+
+export async function apiCreateAnalisisInstruksi(body: {
+  judul: string;
+  instruksi: string;
+  sort_order?: number;
+}): Promise<AnalisisInstruksiRow> {
+  const res = await fetch(`${base()}/api/analisis-instruksi`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(body),
+  });
+  const out = await parse<AnalisisInstruksiRow>(res);
+  const d = data(out);
+  if (!d) throw new Error("Gagal menyimpan template instruksi");
+  return d as AnalisisInstruksiRow;
+}
+
+export async function apiUpdateAnalisisInstruksi(
+  id: string,
+  body: { judul?: string; instruksi?: string; sort_order?: number }
+): Promise<AnalisisInstruksiRow> {
+  const res = await fetch(`${base()}/api/analisis-instruksi/${id}`, {
+    method: "PUT",
+    headers: headers(),
+    body: JSON.stringify(body),
+  });
+  const out = await parse<AnalisisInstruksiRow>(res);
+  const d = data(out);
+  if (!d) throw new Error("Gagal memperbarui");
+  return d as AnalisisInstruksiRow;
+}
+
+export async function apiDeleteAnalisisInstruksi(id: string): Promise<void> {
+  const res = await fetch(`${base()}/api/analisis-instruksi/${id}`, {
+    method: "DELETE",
+    headers: headers(),
+  });
+  await parse(res);
+}
+
+export type PromptImageFieldRow = {
+  id: string;
+  user_id: string;
+  judul: string;
+  prompting: string;
+  sort_order: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function apiListPromptImageFields(): Promise<PromptImageFieldRow[]> {
+  const res = await fetch(`${base()}/api/prompt-image-fields`, { headers: headers() });
+  const out = await parse<PromptImageFieldRow[]>(res);
+  return (data(out) as PromptImageFieldRow[]) ?? [];
+}
+
+export async function apiCreatePromptImageField(body: {
+  judul: string;
+  prompting: string;
+  sort_order?: number;
+}): Promise<PromptImageFieldRow> {
+  const res = await fetch(`${base()}/api/prompt-image-fields`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(body),
+  });
+  const out = await parse<PromptImageFieldRow>(res);
+  const d = data(out);
+  if (!d) throw new Error("Gagal menambah");
+  return d as PromptImageFieldRow;
+}
+
+export async function apiUpdatePromptImageField(
+  id: string,
+  body: { judul?: string; prompting?: string; sort_order?: number }
+): Promise<PromptImageFieldRow> {
+  const res = await fetch(`${base()}/api/prompt-image-fields/${id}`, {
+    method: "PUT",
+    headers: headers(),
+    body: JSON.stringify(body),
+  });
+  const out = await parse<PromptImageFieldRow>(res);
+  const d = data(out);
+  if (!d) throw new Error("Gagal update");
+  return d as PromptImageFieldRow;
+}
+
+export async function apiDeletePromptImageField(id: string): Promise<void> {
+  const res = await fetch(`${base()}/api/prompt-image-fields/${id}`, {
+    method: "DELETE",
+    headers: headers(),
+  });
+  await parse(res);
+}
+
 // ---- Prompts ----
 export async function apiGetPrompts(): Promise<Record<string, unknown>[]> {
   const res = await fetch(`${base()}/api/prompts`, { headers: headers() });
   const out = await parse<Record<string, unknown>[]>(res);
   return (data(out) as Record<string, unknown>[]) ?? [];
+}
+
+export async function apiGetPrompt(id: string): Promise<Record<string, unknown>> {
+  const res = await fetch(`${base()}/api/prompts/${id}`, { headers: headers() });
+  const out = await parse<Record<string, unknown>>(res);
+  const d = data(out);
+  if (!d) throw new Error("Tidak ditemukan");
+  return d as Record<string, unknown>;
 }
 
 export async function apiCreatePrompt(body: {
@@ -128,6 +296,8 @@ export async function apiCreatePrompt(body: {
   tags?: string[];
   is_favorite?: boolean;
   prompt_type?: string;
+  /** Data URL atau URL CDN */
+  cover_image?: string | null;
 }): Promise<Record<string, unknown>> {
   const res = await fetch(`${base()}/api/prompts`, {
     method: "POST",
@@ -140,7 +310,10 @@ export async function apiCreatePrompt(body: {
   return d as Record<string, unknown>;
 }
 
-export async function apiUpdatePrompt(id: string, updates: { is_favorite?: boolean; title?: string }): Promise<Record<string, unknown>> {
+export async function apiUpdatePrompt(
+  id: string,
+  updates: { is_favorite?: boolean; title?: string; cover_image?: string | null; prompt_text?: string; parameters?: Record<string, unknown> }
+): Promise<Record<string, unknown>> {
   const res = await fetch(`${base()}/api/prompts/${id}`, {
     method: "PATCH",
     headers: headers(),
@@ -183,13 +356,6 @@ export async function apiCreatePromptHistory(body: {
 export async function apiDeletePromptHistory(id: string): Promise<void> {
   const res = await fetch(`${base()}/api/prompt_history/${id}`, { method: "DELETE", headers: headers() });
   await parse<unknown>(res);
-}
-
-// ---- Prompt templates ----
-export async function apiGetPromptTemplates(): Promise<Record<string, unknown>[]> {
-  const res = await fetch(`${base()}/api/prompt_templates`, { headers: headers() });
-  const out = await parse<Record<string, unknown>[]>(res);
-  return (data(out) as Record<string, unknown>[]) ?? [];
 }
 
 // ---- Gaya Sertifikat (dropdown dinamis) ----
@@ -270,10 +436,24 @@ export async function apiGetDropdownOptions(): Promise<Record<string, unknown>[]
   return (data(out) as Record<string, unknown>[]) ?? [];
 }
 
+/** Hapus semua dropdown user + isi 25 kategori gambar/iklan (prompt detail ID). Tanpa sertifikat. */
+export async function apiResetSeedDropdownGambar(): Promise<{ categories: number; options: number; message?: string }> {
+  const res = await fetch(`${base()}/api/dropdowns/reset-seed-gambar`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({}),
+  });
+  const out = await parse<{ categories: number; options: number; message?: string }>(res);
+  const d = data(out);
+  if (!d) throw new Error("Gagal reset seed");
+  return d;
+}
+
 export async function apiCreateDropdownCategory(body: {
   name: string;
   slug?: string;
   description?: string;
+  /** ID urutan tampil: 1 = paling atas. Kosong = otomatis belakang */
   sort_order?: number;
 }): Promise<Record<string, unknown>> {
   const res = await fetch(`${base()}/api/dropdown_categories`, {

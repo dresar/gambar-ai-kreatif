@@ -11,3 +11,4 @@ if (!connectionString) throw new Error("DATABASE_URL is required");
 
 const pool = new pg.Pool({ connectionString });
 export const db = drizzle(pool);
+export { pool };

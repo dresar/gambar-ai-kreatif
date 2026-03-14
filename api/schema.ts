@@ -22,8 +22,6 @@ export const profiles = pgTable("profiles", {
   displayName: text("display_name"),
   avatarUrl: text("avatar_url"),
   themePreference: text("theme_preference").default("dark"),
-  aiEndpointUrl: text("ai_endpoint_url"),
-  aiModelName: text("ai_model_name"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -59,18 +57,8 @@ export const prompts = pgTable("prompts", {
   tags: text("tags").array().default([]),
   isFavorite: boolean("is_favorite").default(false),
   promptType: text("prompt_type").default("image"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
-
-export const promptTemplates = pgTable("prompt_templates", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  description: text("description"),
-  category: text("category").default("umum"),
-  presetParameters: jsonb("preset_parameters").default({}),
-  promptFragment: text("prompt_fragment"),
+  /** Data URL atau URL publik (CDN) — sampul grid Perpustakaan */
+  coverImage: text("cover_image"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -82,4 +70,26 @@ export const promptHistory = pgTable("prompt_history", {
   parameters: jsonb("parameters").default({}),
   promptType: text("prompt_type").default("image"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+/** Template instruksi AI untuk halaman Analisis Gambar (judul + teks prompting). Per user, CRUD. */
+export const analisisInstruksiTemplates = pgTable("analisis_instruksi_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  judul: text("judul").notNull(),
+  instruksi: text("instruksi").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+/** Parameter instruksi Buat Prompt (gambar): judul + prompting — user-defined, CRUD, bukan hardcode. */
+export const promptImageInstructionFields = pgTable("prompt_image_instruction_fields", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  judul: text("judul").notNull(),
+  prompting: text("prompting").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

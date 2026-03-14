@@ -4,6 +4,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Copy, Trash2, History } from "lucide-react";
 import { toast } from "sonner";
+import { copyToClipboard } from "@/lib/copyToClipboard";
 
 interface HistoryItem {
   id: string;
@@ -36,7 +37,7 @@ export default function RiwayatPrompt() {
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <History className="h-6 w-6 text-primary" /> Riwayat Prompt
         </h1>
-        <p className="text-muted-foreground mt-1">Daftar semua prompt yang pernah Anda buat</p>
+        <p className="text-muted-foreground mt-1 text-sm">Riwayat generate.</p>
       </div>
 
       {items.length === 0 ? (
@@ -56,7 +57,7 @@ export default function RiwayatPrompt() {
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(item.prompt_text); toast.success("Disalin!"); }} className="h-8 w-8">
+                  <Button type="button" variant="ghost" size="icon" onClick={async () => { const ok = await copyToClipboard(item.prompt_text); if (ok) toast.success("Disalin!"); else toast.error("Gagal salin"); }} className="h-8 w-8">
                     <Copy className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => deleteItem(item.id)} className="h-8 w-8 text-destructive">

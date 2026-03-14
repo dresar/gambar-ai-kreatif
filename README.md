@@ -1,123 +1,136 @@
-# Welcome to your Lovable project
+<div align="center">
 
-## Unified Monorepo (Hono + Vite + Neon)
+# Gambar AI Kreatif
 
-Proyek ini memakai **satu root `package.json`**: frontend (Vite + React) dan backend API (Hono) di folder `api/`.
+**Prompt gambar · Analisis gambar · Sertifikat · Perpustakaan — full-stack dengan auth JWT & PostgreSQL**
 
-### Instalasi dependency (satu perintah)
+[![Node](https://img.shields.io/badge/node-18%2B-339933?style=flat-square&logo=node.js)](https://nodejs.org)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev)
+[![Hono](https://img.shields.io/badge/API-Hono-E36002?style=flat-square)](https://hono.dev)
 
-```bash
-bun add hono @hono/node-server drizzle-orm @neondatabase/serverless bcryptjs jsonwebtoken dotenv && bun add -d drizzle-kit tsx @types/bcryptjs @types/jsonwebtoken
-```
-
-Atau dengan npm:
-
-```bash
-npm install hono @hono/node-server drizzle-orm @neondatabase/serverless bcryptjs jsonwebtoken dotenv
-npm install -D drizzle-kit tsx @types/bcryptjs @types/jsonwebtoken
-```
-
-### Variabel lingkungan
-
-Buat file `.env` di root:
-
-```
-DATABASE_URL="postgresql://neondb_owner:npg_lbZ1MYaAK3uL@ep-late-term-a1ibnjpk-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-JWT_SECRET=your-secret-key
-VITE_API_URL=
-```
-
-`VITE_API_URL` kosong agar di development request ke `/api` di-proxy Vite ke backend (port 5000).
-
-### Script
-
-| Script | Deskripsi |
-|--------|-----------|
-| `bun run dev` | Jalankan frontend Vite (port 8080) |
-| `bun run dev:api` | Jalankan backend Hono (port 5000) |
-| `bun run seed` | Seed user dummy (eka@example.com / password123) |
-| `bun run db:push` | Sinkron skema Drizzle ke Neon |
-
-Jalankan **dua terminal**: `bun run dev` dan `bun run dev:api`. Dev Login memakai kredensial di atas setelah seed dijalankan.
-
-### Menghapus folder `server/` lama
-
-Jika masih ada folder `server/` dari setup sebelumnya, tutup proses yang memakainya (terminal/IDE), lalu hapus manual:
-
-```bash
-rm -rf server
-```
+</div>
 
 ---
 
-## Project info
+## Daftar fitur (lengkap)
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Aplikasi web **privat** (login wajib). Semua data dipisah per user di database.
 
-## How can I edit this code?
+| Modul | Route | Apa yang bisa dilakukan |
+|-------|--------|-------------------------|
+| **Autentikasi** | `/auth` | Daftar akun baru, login email + password, JWT disimpan di browser |
+| **Dashboard** | `/` | Ringkasan akses cepat ke semua modul + statistik jumlah prompt & riwayat |
+| **Buat Prompt** | `/buat-prompt` | Pilih parameter & **gaya dari dropdown** (kategori custom), AI menyusun prompt teks panjang untuk generator gambar; simpan ke perpustakaan |
+| **Analisis Gambar** | `/analisis-gambar` | Unggah gambar → AI vision → JSON terstruktur (parameter visual, prompt_utama, salin untuk AI gambar); template instruksi custom per user |
+| **Generator Sertifikat** | `/generator-sertifikat` | Instruksi + logo (multi-upload) → AI menghasilkan **satu prompt teks panjang** landscape untuk AI gambar sertifikat |
+| **Perpustakaan Prompt** | `/perpustakaan` | Daftar semua prompt tersimpan, favorit, cover, filter |
+| **Detail Perpustakaan** | `/perpustakaan/:id` | Buka/edit prompt, lihat parameter & riwayat terkait |
+| **Pembuat Dropdown** | `/pembuat-dropdown` | CRUD **kategori** & **opsi** dropdown (nama + *prompt fragment*) untuk halaman Buat Prompt — per user |
+| **Riwayat Prompt** | `/riwayat` | Riwayat generate/simpan prompt (history) |
+| **Profil** | `/profil` | Ubah username/email, ganti password |
+| **Tema** | (sidebar) | **Light / Dark** + sidebar collapsible (desktop & mobile sheet) |
 
-There are several ways of editing your application.
+### Fitur teknis & UX
 
-**Use Lovable**
+| Area | Keterangan |
+|------|------------|
+| **API** | REST JSON `{ success, data, error }` — auth Bearer JWT |
+| **Database** | PostgreSQL (Neon) + Drizzle ORM — users, profiles, prompts, history, dropdown, template analisis, dll. |
+| **AI** | Chat completions + **vision** (gambar base64) — konfigurasi via env (`AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`); retry otomatis jika upstream 502/503 |
+| **Deploy** | Frontend Vite + API serverless Vercel (`api/[[...route]].ts`) — same-origin `/api` di production |
+| **Privasi** | `robots.txt` Disallow all, meta noindex — tidak untuk indeks publik |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## Akun default (setelah seed)
 
-**Use your preferred IDE**
+Jalankan **`npm run seed`** sekali (dengan `DATABASE_URL` valid) untuk mengisi user demo + data contoh.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+| Field | Nilai default |
+|-------|----------------|
+| **Email** | `eka@example.com` |
+| **Username** | `admin_eka` |
+| **Password** | `password123` |
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+> **Peringatan:** Sandi di atas **hanya untuk development / demo**. Di production, **jangan** mengandalkan user seed — daftar akun sendiri atau hapus/ubah user demo setelah deploy.
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Scripts npm
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+| Script | Fungsi |
+|--------|--------|
+| `npm run dev` | Frontend **:8080** + API **:5000** (concurrent) |
+| `npm run dev:frontend` | Hanya Vite |
+| `npm run dev:api` | Hanya API Hono |
+| `npm run build` | Build production → folder `dist` |
+| `npm run seed` | Seed user demo + dropdown + data contoh |
+| `npm run db:push` | Sinkron skema Drizzle ke database |
+| `npm run jwt:secret` | Generate **JWT_SECRET** acak (salin ke `.env` / Vercel) |
+| `npm run lint` | ESLint |
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## Variabel lingkungan (ringkas)
+
+| Variable | Wajib | Keterangan |
+|----------|--------|------------|
+| `DATABASE_URL` | Ya | Connection string PostgreSQL (sslmode=require untuk Neon) |
+| `JWT_SECRET` | Ya (prod) | Minimal **32 karakter** di production |
+| `VITE_API_URL` | Dev saja | Mis. `http://localhost:5000` — **kosong** di Vercel (same origin) |
+| `AI_BASE_URL` | Untuk AI | Base URL chat completions |
+| `AI_MODEL` | Untuk AI | Nama model |
+| `AI_API_KEY` | Untuk AI | Bearer token |
+| `FRONTEND_URL` | Opsional | Origin depan untuk CORS (Vercel) |
+
+Salin dari **`.env.example`** → **`.env`** (lokal). File **`.env` jangan di-commit.**
+
+---
+
+## Quick start
+
+```bash
+git clone <repo-anda>
+cd gambar-ai-kreatif
+cp .env.example .env
+# Isi DATABASE_URL, JWT_SECRET, AI_*
+
+npm install
+npm run jwt:secret    # opsional: generate JWT
+npm run db:push       # skema DB
+npm run seed          # user demo + data
+npm run dev           # buka http://localhost:8080
 ```
 
-**Edit a file directly in GitHub**
+Login dengan tabel **Akun default** di atas (setelah seed).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## Production (Vercel)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. Set semua env di **Vercel → Settings → Environment Variables** (sama seperti `.env.example`, tanpa `VITE_API_URL` atau kosong).
+2. Deploy: build `npm run build`, output **`dist`**.
+3. Pastikan **`JWT_SECRET`** production panjang & unik (boleh dari `npm run jwt:secret`).
 
-## What technologies are used for this project?
+Detail tambahan ada di komentar dalam **`.env.example`**.
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Stack
 
-## How can I deploy this project?
+| Lapisan | Teknologi |
+|---------|-----------|
+| UI | React 18, React Router, Tailwind, shadcn/ui, Lucide |
+| State / UX | TanStack Query, Sonner toast, dark mode |
+| Build | Vite 5, TypeScript |
+| API | Hono, JWT, bcrypt |
+| DB | Drizzle ORM, `pg` (Node) |
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+<div align="center">
 
-Yes, you can!
+**Gambar AI Kreatif** — skripsi / project pribadi · baca lisensi repo jika ada
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+</div>

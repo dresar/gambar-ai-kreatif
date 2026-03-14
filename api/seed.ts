@@ -14,35 +14,12 @@ import {
   dropdownOptions,
   prompts,
   promptHistory,
-  promptTemplates,
 } from "./schema";
+import { DROPDOWN_SEED_GAMBAR } from "./dropdown-seed-gambar";
 
 const DEV_EMAIL = "eka@example.com";
 const DEV_USERNAME = "admin_eka";
 const DEV_PASSWORD = "password123";
-
-const DEFAULT_GAYA = [
-  {
-    name: "Klasik",
-    fragment:
-      "classic elegant certificate with ornate gold borders, serif typography, and traditional formal design",
-  },
-  {
-    name: "Elegan",
-    fragment:
-      "sophisticated elegant certificate with subtle gradients, refined typography, and luxurious minimalist aesthetics",
-  },
-  {
-    name: "Modern Minimal",
-    fragment:
-      "modern minimalist certificate with clean lines, sans-serif typography, and contemporary design elements",
-  },
-  {
-    name: "Formal Akademik",
-    fragment:
-      "formal academic certificate with institutional seal, structured layout, and professional academic styling",
-  },
-];
 
 async function seed() {
   console.log("Seeding...");
@@ -82,139 +59,34 @@ async function seed() {
     });
   }
 
-  // ---- Dropdown: Gaya Sertifikat ----
-  const [gayaCat] = await db
-    .insert(dropdownCategories)
-    .values({
-      userId,
-      name: "Gaya Sertifikat",
-      slug: "gaya-sertifikat",
-      description: "Gaya visual untuk generator sertifikat",
-      sortOrder: 0,
-    })
-    .onConflictDoNothing()
-    .returning();
-
-  const gayaCategoryId = gayaCat?.id;
-  if (gayaCategoryId) {
-    for (let i = 0; i < DEFAULT_GAYA.length; i++) {
-      await db
-        .insert(dropdownOptions)
+  // ---- Dropdown gambar (25 kategori, tanpa sertifikat) — hanya jika user belum punya kategori ----
+  const existingCats = await db.select().from(dropdownCategories).where(eq(dropdownCategories.userId, userId)).limit(1);
+  if (existingCats.length === 0) {
+    let sortCat = 1;
+    for (const cat of DROPDOWN_SEED_GAMBAR) {
+      const [row] = await db
+        .insert(dropdownCategories)
         .values({
           userId,
-          categoryId: gayaCategoryId,
-          name: DEFAULT_GAYA[i].name,
-          promptFragment: DEFAULT_GAYA[i].fragment,
-          sortOrder: i,
+          name: cat.name,
+          slug: cat.slug,
+          description: cat.description,
+          sortOrder: sortCat++,
         })
-        .onConflictDoNothing();
+        .returning();
+      if (!row) continue;
+      let sortOpt = 1;
+      for (const opt of cat.options) {
+        await db.insert(dropdownOptions).values({
+          userId,
+          categoryId: row.id,
+          name: opt.name,
+          promptFragment: opt.prompt,
+          sortOrder: sortOpt++,
+        });
+      }
     }
-  }
-
-  // ---- Dropdown builder (contoh kategori untuk BuatPrompt) ----
-  const builderCategories = [
-    { name: "Pencahayaan", slug: "pencahayaan" },
-    { name: "Gaya Kamera", slug: "gaya-kamera" },
-    { name: "Mood", slug: "mood" },
-  ];
-
-  const [lightCat] = await db
-    .insert(dropdownCategories)
-    .values({
-      userId,
-      name: builderCategories[0].name,
-      slug: builderCategories[0].slug,
-      sortOrder: 10,
-    })
-    .onConflictDoNothing()
-    .returning();
-
-  const [cameraCat] = await db
-    .insert(dropdownCategories)
-    .values({
-      userId,
-      name: builderCategories[1].name,
-      slug: builderCategories[1].slug,
-      sortOrder: 20,
-    })
-    .onConflictDoNothing()
-    .returning();
-
-  const [moodCat] = await db
-    .insert(dropdownCategories)
-    .values({
-      userId,
-      name: builderCategories[2].name,
-      slug: builderCategories[2].slug,
-      sortOrder: 30,
-    })
-    .onConflictDoNothing()
-    .returning();
-
-  if (lightCat) {
-    await db
-      .insert(dropdownOptions)
-      .values([
-        {
-          userId,
-          categoryId: lightCat.id,
-          name: "Golden hour",
-          promptFragment: "warm golden hour lighting, soft shadows",
-          sortOrder: 0,
-        },
-        {
-          userId,
-          categoryId: lightCat.id,
-          name: "Neon",
-          promptFragment: "neon lights, high contrast, cyberpunk atmosphere",
-          sortOrder: 1,
-        },
-      ])
-      .onConflictDoNothing();
-  }
-
-  if (cameraCat) {
-    await db
-      .insert(dropdownOptions)
-      .values([
-        {
-          userId,
-          categoryId: cameraCat.id,
-          name: "Wide angle",
-          promptFragment: "wide angle lens, dramatic perspective",
-          sortOrder: 0,
-        },
-        {
-          userId,
-          categoryId: cameraCat.id,
-          name: "Portrait 50mm",
-          promptFragment: "50mm portrait lens, shallow depth of field, bokeh background",
-          sortOrder: 1,
-        },
-      ])
-      .onConflictDoNothing();
-  }
-
-  if (moodCat) {
-    await db
-      .insert(dropdownOptions)
-      .values([
-        {
-          userId,
-          categoryId: moodCat.id,
-          name: "Ceria",
-          promptFragment: "bright, cheerful, vibrant colors, optimistic mood",
-          sortOrder: 0,
-        },
-        {
-          userId,
-          categoryId: moodCat.id,
-          name: "Dramatis",
-          promptFragment: "dramatic, high contrast, cinematic atmosphere",
-          sortOrder: 1,
-        },
-      ])
-      .onConflictDoNothing();
+    console.log("Dropdown gambar:", DROPDOWN_SEED_GAMBAR.length, "kategori diisi.");
   }
 
   // ---- Prompts & riwayat ----
@@ -261,35 +133,6 @@ async function seed() {
       promptType: "image",
     });
   }
-
-  // ---- Template prompt ----
-  await db
-    .insert(promptTemplates)
-    .values([
-      {
-        userId,
-        name: "Thumbnail YouTube Tech",
-        description: "Template untuk thumbnail video teknologi / coding",
-        category: "thumbnail",
-        presetParameters: {
-          style: "bold, high contrast, big title text",
-        },
-        promptFragment:
-          "high contrast youtube thumbnail, large bold title text, tech background, clean composition",
-      },
-      {
-        userId,
-        name: "Product Shot Minimalis",
-        description: "Template foto produk gaya minimalis di studio",
-        category: "produk",
-        presetParameters: {
-          lighting: "softbox",
-        },
-        promptFragment:
-          "minimalist product photo on clean background, soft studio lighting, high detail, editorial style",
-      },
-    ])
-    .onConflictDoNothing();
 
   console.log("Seed berhasil:");
   console.log("  Email:", DEV_EMAIL);

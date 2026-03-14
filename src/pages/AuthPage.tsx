@@ -24,12 +24,12 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         const { user, token } = await apiLogin(email, password);
-        setAuthToken(token);
+        if (token && typeof token === "string") setAuthToken(token);
         setUser(user);
         toast.success("Berhasil masuk!");
       } else {
         const { user, token } = await apiSignUp(email, password);
-        setAuthToken(token);
+        if (token && typeof token === "string") setAuthToken(token);
         setUser(user);
         toast.success("Pendaftaran berhasil!");
       }
@@ -44,7 +44,7 @@ export default function AuthPage() {
     setLoading(true);
     try {
       const { user, token } = await apiLogin(DEV_EMAIL, DEV_PASSWORD);
-      setAuthToken(token);
+      if (token && typeof token === "string") setAuthToken(token);
       setUser(user);
       toast.success("Dev login berhasil!");
     } catch (err: unknown) {

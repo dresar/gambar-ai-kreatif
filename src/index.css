@@ -145,4 +145,20 @@
   .shadow-elevated {
     box-shadow: 0 4px 24px -4px hsl(var(--foreground) / 0.08), 0 2px 8px -2px hsl(var(--foreground) / 0.04);
   }
+
+  /* Gulir sidebar mengikuti tema (bukan jalur putih bawaan OS) */
+  .sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--sidebar-border)) hsl(var(--sidebar-background));
+  }
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: hsl(var(--sidebar-background));
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--sidebar-border));
+    border-radius: 9999px;
+  }
 }
