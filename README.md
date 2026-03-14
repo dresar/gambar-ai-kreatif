@@ -162,6 +162,27 @@ Login dengan tabel **Akun default** di atas (setelah seed).
 
 ---
 
+## Update kode (clone / fork tetap segar)
+
+### Lokal — `git pull`
+
+```bash
+git pull origin main   # atau nama branch default kamu
+```
+
+### Otomatis — GitHub Actions `sync.yml`
+
+1. Di repo **fork / clone** kamu: **Settings → Secrets and variables → Actions → Variables**
+2. Tambah **Repository variable**:
+   - **Name:** `UPSTREAM_REPO`
+   - **Value:** URL git repo asli, contoh `https://github.com/username/gambar-ai-kreatif.git`
+3. **Actions** → workflow **Sync upstream** → **Run workflow** (bisa isi **upstream_url** sekali jalan kalau belum set variable).
+4. Jadwal bawaan: **setiap Senin** merge branch default upstream ke branch default repo kamu.
+
+Konflik merge harus diselesaikan manual di mesin lokal (`git merge`, lalu push).
+
+---
+
 ## Production (Vercel)
 
 1. **Vercel → Settings → Environment Variables:** `DATABASE_URL`, `JWT_SECRET` (panjang), `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`. **`VITE_API_URL` kosong** (same origin).

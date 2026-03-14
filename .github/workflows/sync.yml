@@ -1,0 +1,71 @@
+# Sinkron repo kamu dengan upstream (repo asli) supaya clone/fork tetap dapat update kode terbaru.
+#
+# Cara pakai:
+# 1. Fork / clone repo ini ke akun GitHub kamu.
+# 2. Settings → Secrets and variables → Actions → Variables → New repository variable
+#    Name: UPSTREAM_REPO
+#    Value: URL git upstream, contoh: https://github.com/PEMILIK/gambar-ai-kreatif.git
+# 3. Actions → "Sync upstream" → Run workflow (manual), atau biarkan jadwal mingguan jalan.
+#
+# Lokal (tanpa Actions): git remote add upstream <URL> && git fetch upstream && git merge upstream/main
+
+name: Sync upstream
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_url:
+        description: "URL git upstream (opsional, override variable)"
+        required: false
+        default: ""
+  schedule:
+    # Setiap Senin 06:00 UTC — sesuaikan jika perlu
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: sync-upstream-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Merge upstream → default branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve upstream URL
+        id: up
+        run: |
+          URL="${{ inputs.upstream_url }}"
+          if [ -z "$URL" ]; then URL="${{ vars.UPSTREAM_REPO }}"; fi
+          if [ -z "$URL" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::notice::Set repository variable UPSTREAM_REPO atau isi input upstream_url saat Run workflow."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "url=$URL" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fetch & merge upstream
+        if: steps.up.outputs.skip == 'false'
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH="${{ github.event.repository.default_branch }}"
+          git checkout "$BRANCH"
+          git remote remove upstream 2>/dev/null || true
+          git remote add upstream "${{ steps.up.outputs.url }}"
+          git fetch upstream "$BRANCH"
+          git merge "upstream/$BRANCH" -m "chore(sync): merge upstream $BRANCH" --no-edit
+          git push origin "$BRANCH"
+
+      - name: Skip notice
+        if: steps.up.outputs.skip == 'true'
+        run: echo "Sync dilewati — belum ada UPSTREAM_REPO."
