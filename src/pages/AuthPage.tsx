@@ -11,6 +11,11 @@ import { toast } from "sonner";
 const DEV_EMAIL = "eka@example.com";
 const DEV_PASSWORD = "password123";
 
+/** Production build (npm run build / Vercel): true — sembunyikan login seed. */
+const isProduction =
+  import.meta.env.PROD ||
+  import.meta.env.VITE_APP_MODE === "production";
+
 export default function AuthPage() {
   const { setUser } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
@@ -46,11 +51,11 @@ export default function AuthPage() {
       const { user, token } = await apiLogin(DEV_EMAIL, DEV_PASSWORD);
       if (token && typeof token === "string") setAuthToken(token);
       setUser(user);
-      toast.success("Dev login berhasil!");
+      toast.success("Masuk (akun demo)");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Dev login gagal.";
+      const msg = err instanceof Error ? err.message : "Login demo gagal.";
       toast.error(msg);
-      console.error("Dev login error:", err);
+      if (import.meta.env.DEV) console.error("Login demo:", err);
     } finally {
       setLoading(false);
     }
@@ -64,10 +69,14 @@ export default function AuthPage() {
             <Wand2 className="h-7 w-7 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            AI Prompt Generator
+            Gambar AI Kreatif
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {isLogin ? "Masuk ke akun Anda (wajib untuk mengakses aplikasi)" : "Buat akun baru"}
+            {isLogin
+              ? isProduction
+                ? "Masuk dengan email dan kata sandi Anda"
+                : "Masuk ke akun (mode pengembangan: ada login cepat di bawah)"
+              : "Buat akun baru"}
           </p>
         </div>
 
@@ -110,19 +119,23 @@ export default function AuthPage() {
             >
               {isLogin ? "Belum punya akun? Daftar" : "Sudah punya akun? Masuk"}
             </button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full text-muted-foreground border-dashed"
-              onClick={handleDevLogin}
-              disabled={loading}
-            >
-              Login Cepat (akun seed database)
-            </Button>
-            <p className="text-xs text-muted-foreground text-center mt-1">
-              Semua login memakai autentikasi database. Login cepat memakai akun dari <code className="bg-muted px-1 rounded">npm run seed</code>.
-            </p>
+            {!isProduction && isLogin && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-dashed border-amber-500/50 text-amber-800 dark:text-amber-200 bg-amber-500/5"
+                  onClick={handleDevLogin}
+                  disabled={loading}
+                >
+                  Hanya dev: masuk akun seed (npm run seed)
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Tombol ini tidak tampil di <strong>production</strong> (build deploy).
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

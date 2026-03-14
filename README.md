@@ -82,9 +82,65 @@ Jalankan **`npm run seed`** sekali (dengan `DATABASE_URL` valid) untuk mengisi u
 | `AI_BASE_URL` | Untuk AI | Base URL chat completions |
 | `AI_MODEL` | Untuk AI | Nama model |
 | `AI_API_KEY` | Untuk AI | Bearer token |
-| `FRONTEND_URL` | Opsional | Origin depan untuk CORS (Vercel) |
+| `FRONTEND_URL` | Opsional | Origin depan untuk CORS (hanya jika perlu) |
 
-Salin dari **`.env.example`** → **`.env`** (lokal). File **`.env` jangan di-commit.**
+Buat file **`.env`** di root (lihat contoh variabel di tabel). **`.env` jangan di-commit.**
+
+---
+
+## Mode development vs production
+
+| Lingkungan | Cara tahu | Halaman login |
+|------------|-----------|----------------|
+| **Development** | `npm run dev` (Vite) | Tombol **hanya dev: akun seed** tampil (setelah `npm run seed`) |
+| **Production** | `npm run build` + deploy (Vercel) | Hanya form **Masuk / Daftar** — tanpa tombol seed |
+
+- **Frontend:** Vite meng-set `import.meta.env.PROD` saat build → tombol seed disembunyikan. Tidak perlu `NODE_ENV` di `.env` untuk itu.
+- **API (Node):** `NODE_ENV=production` di Vercel otomatis. Lokal API biasanya tidak perlu di-set.
+
+---
+
+## Console: `[AUTOFILL]` / `autofill.*.js`
+
+Bukan dari aplikasi ini. Itu **ekstensi browser** (pengisi password / autofill). Abaikan, atau matikan ekstensi di tab itu — tidak mempengaruhi API.
+
+---
+
+## Login HTTP 500 di production (Vercel)
+
+### Wajib: `NODEJS_HELPERS=0`
+
+Di **Vercel → Settings → Environment Variables** tambah:
+
+| Name | Value |
+|------|--------|
+| **`NODEJS_HELPERS`** | **`0`** |
+
+Tanpa ini, **semua POST dengan body JSON** (login, daftar, dll.) di Hono sering **500**. Ini batasan helper request Vercel, bukan bug app kamu.  
+Redeploy setelah menambah variable.
+
+### Cek lain
+
+| Penyebab | Perbaikan |
+|----------|-----------|
+| **`DATABASE_URL`** | Ada di Vercel; idealnya **tanpa** `channel_binding` (app sudah normalisasi). |
+| **`JWT_SECRET`** | ≥32 karakter (`npm run jwt:secret`). |
+| **Tabel / user** | Lokal: `npm run db:push` + `npm run seed` dengan Neon yang sama. |
+
+### Daftar env Vercel (production)
+
+| Variable | Wajib | Keterangan |
+|----------|--------|------------|
+| **`NODEJS_HELPERS`** | **Ya** | **`0`** — supaya POST/login jalan |
+| `DATABASE_URL` | Ya | Neon (pooler) |
+| `JWT_SECRET` | Ya | Panjang, acak |
+| `AI_BASE_URL` | Untuk AI | |
+| `AI_MODEL` | Untuk AI | |
+| `AI_API_KEY` | Untuk AI | |
+| `NODE_ENV` | Tidak | Vercel sudah `production` |
+| `VITE_API_URL` | Jangan isi | Kosong = same origin |
+
+Setelah perbaikan, response error dari API lebih jelas jika masih gagal.
 
 ---
 
@@ -93,8 +149,7 @@ Salin dari **`.env.example`** → **`.env`** (lokal). File **`.env` jangan di-co
 ```bash
 git clone <repo-anda>
 cd gambar-ai-kreatif
-cp .env.example .env
-# Isi DATABASE_URL, JWT_SECRET, AI_*
+# Buat .env — isi DATABASE_URL, JWT_SECRET, AI_*
 
 npm install
 npm run jwt:secret    # opsional: generate JWT
@@ -109,11 +164,9 @@ Login dengan tabel **Akun default** di atas (setelah seed).
 
 ## Production (Vercel)
 
-1. Set semua env di **Vercel → Settings → Environment Variables** (sama seperti `.env.example`, tanpa `VITE_API_URL` atau kosong).
-2. Deploy: build `npm run build`, output **`dist`**.
-3. Pastikan **`JWT_SECRET`** production panjang & unik (boleh dari `npm run jwt:secret`).
-
-Detail tambahan ada di komentar dalam **`.env.example`**.
+1. **Vercel → Settings → Environment Variables:** `DATABASE_URL`, `JWT_SECRET` (panjang), `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`. **`VITE_API_URL` kosong** (same origin).
+2. Deploy: `npm run build`, output **`dist`**.
+3. Skema + user demo: lokal jalankan `npm run db:push` dan `npm run seed` dengan Neon URL yang sama.
 
 ---
 

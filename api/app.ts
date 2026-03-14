@@ -109,32 +109,69 @@ function createToken(userId: string, email: string): string {
 
 // ---- Auth ----
 app.post("/api/auth/login", async (c) => {
-  const body = (await c.req.json()) as { email?: string; password?: string };
-  const { email, password } = body;
-  if (!email || !password) return jsonError(c, "Email dan password wajib", 400);
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    return jsonError(c, "Email atau password salah", 401);
+  try {
+    let body: { email?: string; password?: string };
+    try {
+      body = (await c.req.json()) as { email?: string; password?: string };
+    } catch {
+      return jsonError(c, "Body JSON tidak valid", 400);
+    }
+    const { email, password } = body;
+    if (!email || !password) return jsonError(c, "Email dan password wajib", 400);
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!user?.passwordHash) {
+      return jsonError(c, "Email atau password salah", 401);
+    }
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) return jsonError(c, "Email atau password salah", 401);
+    if (!JWT_SECRET || JWT_SECRET.length < 8) {
+      console.error("[login] JWT_SECRET kurang / kosong — set di environment (production min 32 karakter)");
+      return jsonError(c, "Server: JWT_SECRET belum dikonfigurasi dengan benar", 503);
+    }
+    const token = createToken(user.id, user.email);
+    return jsonSuccess(c, { user: { id: user.id, email: user.email, username: user.username }, token }, 200);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[login]", msg);
+    if (msg.includes("DATABASE_URL") || msg.includes("connect") || msg.includes("ECONNREFUSED")) {
+      return jsonError(c, "Database tidak terhubung — cek DATABASE_URL di environment (Vercel)", 503);
+    }
+    return jsonError(c, "Login gagal (server). Cek log / DATABASE_URL / JWT_SECRET.", 500);
   }
-  const token = createToken(user.id, user.email);
-  return jsonSuccess(c, { user: { id: user.id, email: user.email, username: user.username }, token }, 200);
 });
 
 app.post("/api/auth/signup", async (c) => {
-  const body = (await c.req.json()) as { email?: string; password?: string; username?: string };
-  const { email, password, username } = body;
-  if (!email || !password) return jsonError(c, "Email dan password wajib", 400);
-  const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  if (existing.length > 0) return jsonError(c, "Email sudah terdaftar", 400);
-  const passwordHash = await bcrypt.hash(password, 10);
-  const [user] = await db
-    .insert(users)
-    .values({ email, passwordHash, username: username || null })
-    .returning();
-  if (!user) return jsonError(c, "Gagal membuat akun", 500);
-  await db.insert(profiles).values({ userId: user.id, displayName: username || email });
-  const token = createToken(user.id, user.email);
-  return jsonSuccess(c, { user: { id: user.id, email: user.email, username: user.username }, token }, 201);
+  try {
+    let body: { email?: string; password?: string; username?: string };
+    try {
+      body = (await c.req.json()) as { email?: string; password?: string; username?: string };
+    } catch {
+      return jsonError(c, "Body JSON tidak valid", 400);
+    }
+    const { email, password, username } = body;
+    if (!email || !password) return jsonError(c, "Email dan password wajib", 400);
+    if (!JWT_SECRET || JWT_SECRET.length < 8) {
+      return jsonError(c, "Server: JWT_SECRET belum dikonfigurasi", 503);
+    }
+    const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (existing.length > 0) return jsonError(c, "Email sudah terdaftar", 400);
+    const passwordHash = await bcrypt.hash(password, 10);
+    const [user] = await db
+      .insert(users)
+      .values({ email, passwordHash, username: username || null })
+      .returning();
+    if (!user) return jsonError(c, "Gagal membuat akun", 500);
+    await db.insert(profiles).values({ userId: user.id, displayName: username || email });
+    const token = createToken(user.id, user.email);
+    return jsonSuccess(c, { user: { id: user.id, email: user.email, username: user.username }, token }, 201);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[signup]", msg);
+    if (msg.includes("DATABASE_URL") || msg.includes("connect")) {
+      return jsonError(c, "Database tidak terhubung — cek DATABASE_URL", 503);
+    }
+    return jsonError(c, "Daftar gagal (server).", 500);
+  }
 });
 
 app.get("/api/auth/me", authMiddleware, async (c) => {
