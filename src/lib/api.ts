@@ -7,6 +7,21 @@ import type { ApiResponse } from "@/lib/api-types";
 const base = () => getApiUrl();
 const headers = () => getAuthHeaders();
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 60_000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error(`Request timeout (${Math.round(timeoutMs / 1000)} detik). Coba lagi.`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 async function parse<T>(res: Response): Promise<ApiResponse<T>> {
   const json = (await res.json().catch(() => ({}))) as ApiResponse<T>;
   if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
@@ -20,11 +35,11 @@ function data<T>(json: ApiResponse<T>): T | null {
 
 // ---- Auth ----
 export async function apiLogin(email: string, password: string): Promise<{ user: { id: string; email: string; username?: string | null }; token: string }> {
-  const res = await fetch(`${base()}/api/auth/login`, {
+  const res = await fetchWithTimeout(`${base()}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
-  });
+  }, 60_000);
   const out = await parse<{ user: { id: string; email: string; username?: string | null }; token: string }>(res);
   const d = data(out);
   if (!d) throw new Error("Login gagal");
@@ -36,11 +51,11 @@ export async function apiSignUp(
   password: string,
   username?: string
 ): Promise<{ user: { id: string; email: string; username?: string | null }; token: string }> {
-  const res = await fetch(`${base()}/api/auth/signup`, {
+  const res = await fetchWithTimeout(`${base()}/api/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, username }),
-  });
+  }, 60_000);
   const out = await parse<{ user: { id: string; email: string; username?: string | null }; token: string }>(res);
   const d = data(out);
   if (!d) throw new Error("Daftar gagal");

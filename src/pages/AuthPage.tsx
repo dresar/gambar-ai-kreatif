@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { apiLogin, apiSignUp } from "@/lib/api";
+import { apiLogin } from "@/lib/api";
 import { setAuthToken } from "@/lib/auth";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ const isProduction =
 
 export default function AuthPage() {
   const { setUser } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,17 +26,10 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isLogin) {
-        const { user, token } = await apiLogin(email, password);
-        if (token && typeof token === "string") setAuthToken(token);
-        setUser(user);
-        toast.success("Berhasil masuk!");
-      } else {
-        const { user, token } = await apiSignUp(email, password);
-        if (token && typeof token === "string") setAuthToken(token);
-        setUser(user);
-        toast.success("Pendaftaran berhasil!");
-      }
+      const { user, token } = await apiLogin(email, password);
+      if (token && typeof token === "string") setAuthToken(token);
+      setUser(user);
+      toast.success("Berhasil masuk!");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
@@ -72,11 +64,9 @@ export default function AuthPage() {
             Gambar AI Kreatif
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {isLogin
-              ? isProduction
-                ? "Masuk dengan email dan kata sandi Anda"
-                : "Masuk ke akun (mode pengembangan: ada login cepat di bawah)"
-              : "Buat akun baru"}
+            {isProduction
+              ? "Masuk dengan email dan kata sandi Anda"
+              : "Masuk ke akun (mode pengembangan: ada login cepat di bawah)"}
           </p>
         </div>
 
@@ -107,19 +97,12 @@ export default function AuthPage() {
             </div>
             <Button type="submit" className="w-full gradient-bg" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLogin ? "Masuk" : "Daftar"}
+              Masuk
             </Button>
           </form>
 
           <div className="mt-4 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isLogin ? "Belum punya akun? Daftar" : "Sudah punya akun? Masuk"}
-            </button>
-            {!isProduction && isLogin && (
+            {!isProduction && (
               <>
                 <Button
                   type="button"
