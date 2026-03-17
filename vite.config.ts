@@ -7,6 +7,7 @@ export default defineConfig({
     host: "::",
     port: 8080,
     hmr: { overlay: false },
+    // Proxy hanya dipakai saat npm run dev. Production (Vercel) pakai same origin + vercel.json rewrites.
     proxy: {
       "/api": { target: "http://localhost:5000", changeOrigin: true },
     },

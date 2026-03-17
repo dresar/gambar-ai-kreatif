@@ -1,10 +1,21 @@
 /**
- * Base URL untuk panggilan API. Di development dengan Vite proxy gunakan ''.
+ * Base URL untuk panggilan API.
+ * - Development: proxy Vite ke localhost:5000, atau pakai VITE_API_URL.
+ * - Production (Vercel): selalu same origin (window.location.origin) agar /api
+ *   di-rewrite ke serverless backend di domain yang sama. Nilai localhost dari
+ *   env di-build diabaikan saat origin bukan localhost.
  */
 const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 export function getApiUrl(): string {
-  return API_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:5000");
+  if (typeof window !== "undefined") {
+    const isProduction = !window.location.origin.startsWith("http://localhost");
+    if (isProduction) {
+      return window.location.origin;
+    }
+    return API_URL || "http://localhost:5000";
+  }
+  return API_URL || "http://localhost:5000";
 }
 
 import { getAuthToken } from "@/lib/auth";
