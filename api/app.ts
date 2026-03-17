@@ -8,7 +8,7 @@ import { cors } from "hono/cors";
 import { jwt } from "hono/jwt";
 import bcrypt from "bcryptjs";
 import jwtSign from "jsonwebtoken";
-import { db, pool } from "./db";
+import { db, pool } from "./db.js";
 import {
   users,
   profiles,
@@ -18,11 +18,11 @@ import {
   promptImageInstructionFields,
   dropdownCategories,
   dropdownOptions,
-} from "./schema";
+} from "./schema.js";
 import { eq, and, desc, asc } from "drizzle-orm";
-import { rowToSnake, rowsToSnake } from "./snake";
-import { chatCompletions, analyzeImageToPromptJson, certificatePromptWithLogos } from "./ai-chat";
-import { DROPDOWN_SEED_GAMBAR } from "./dropdown-seed-gambar";
+import { rowToSnake, rowsToSnake } from "./snake.js";
+import { chatCompletions, analyzeImageToPromptJson, certificatePromptWithLogos } from "./ai-chat.js";
+import { DROPDOWN_SEED_GAMBAR } from "./dropdown-seed-gambar.js";
 
 const IS_PROD = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
 const JWT_SECRET = process.env.JWT_SECRET || (IS_PROD ? "unset-production-jwt" : "dev-only-secret-not-for-production");

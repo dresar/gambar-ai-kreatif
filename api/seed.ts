@@ -6,7 +6,7 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { db } from "./seed-db";
+import { db } from "./seed-db.js";
 import {
   users,
   profiles,
@@ -14,8 +14,8 @@ import {
   dropdownOptions,
   prompts,
   promptHistory,
-} from "./schema";
-import { DROPDOWN_SEED_GAMBAR } from "./dropdown-seed-gambar";
+} from "./schema.js";
+import { DROPDOWN_SEED_GAMBAR } from "./dropdown-seed-gambar.js";
 
 const DEV_EMAIL = "eka@example.com";
 const DEV_USERNAME = "admin_eka";
